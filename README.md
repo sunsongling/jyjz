@@ -65,10 +65,16 @@ common/decision-store.js
 
 1. 使用 HBuilderX 打开项目根目录。
 2. 在 `manifest.json` 中配置微信小程序 AppID。企业微信小程序可使用企业微信关联的小程序 AppID。
-3. 在 HBuilderX 中选择“运行到小程序模拟器 -> 微信开发者工具”。
-4. 在微信开发者工具中预览、真机调试或上传。
+3. 参考 `project.config.example.json` 与 `project.private.config.example.json` 在本地生成微信开发者工具配置，并填写自己的 AppID；这两份本地配置不应提交到 Git。
+4. 在 HBuilderX 中选择“运行到小程序模拟器 -> 微信开发者工具”。
+5. 在微信开发者工具中预览、真机调试或上传。
 
 当前项目未内置 `@dcloudio` 命令行构建依赖，建议使用 HBuilderX 运行和发行。
+
+## Git 注意事项
+
+- `project.config.json` 和 `project.private.config.json` 已加入 `.gitignore`，避免误提交真实 AppID。
+- 如需重新生成微信开发者工具配置，可复制示例文件并仅在本地填写 AppID。
 
 ## 验收建议
 

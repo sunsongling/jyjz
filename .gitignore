@@ -4,6 +4,8 @@ unpackage/
 .hbuilderx/
 .idea/
 .vscode/
+project.config.json
+project.private.config.json
 
 dist/
 build/*.log
