@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>解忧抉择 - 浏览器预览</title>
+	<style>
+		* { box-sizing: border-box; }
+		body {
+			margin: 0;
+			min-height: 100vh;
+			display: grid;
+			place-items: center;
+			background: #e8e3dc;
+			font-family: Arial, "Microsoft YaHei", sans-serif;
+			color: #2d2a31;
+		}
+		.phone {
+			width: min(430px, 100vw);
+			height: min(880px, 100vh);
+			overflow: auto;
+			background: #f5f2ec;
+			box-shadow: 0 24px 70px rgba(30, 24, 56, 0.2);
+		}
+		.page { display: none; padding: 32px 20px 38px; }
+		.page.active { display: block; }
+		.back {
+			display: inline-flex;
+			align-items: center;
+			height: 34px;
+			margin-bottom: 14px;
+			padding: 0 12px;
+			border: 0;
+			border-radius: 8px;
+			background: #e8e1d7;
+			color: #3e3934;
+			font-size: 14px;
+			cursor: pointer;
+		}
+		.kicker { color: #8b7e74; font-size: 14px; }
+		.title {
+			margin-top: 10px;
+			font-size: 28px;
+			line-height: 1.25;
+			font-weight: 700;
+		}
+		.subtitle {
+			margin-top: 12px;
+			color: #706a64;
+			font-size: 15px;
+			line-height: 1.7;
+		}
+		.mode {
+			margin-top: 18px;
+			padding: 18px;
+			border-radius: 8px;
+			color: #fff;
+			cursor: pointer;
+		}
+		.random { background: #6f8f84; }
+		.rational { background: #7b7292; }
+		.mode h2 { margin: 0; font-size: 20px; }
+		.mode p { margin: 9px 0 14px; opacity: .86; line-height: 1.5; }
+		.mode strong { font-size: 15px; }
+		.panel, .record {
+			margin-top: 16px;
+			padding: 18px;
+			border-radius: 8px;
+			background: #fff;
+		}
+		.section-title { color: #8b7e74; font-size: 13px; }
+		.quote {
+			margin-top: 9px;
+			font-size: 18px;
+			font-weight: 700;
+			line-height: 1.55;
+		}
+		.quick-grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 10px;
+			margin-top: 14px;
+		}
+		.quick {
+			height: 50px;
+			display: grid;
+			place-items: center;
+			border-radius: 8px;
+			border: 0;
+			background: #e8e1d7;
+			color: #3e3934;
+			font-weight: 700;
+			cursor: pointer;
+		}
+		.random-tabs {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 8px;
+			margin-bottom: 14px;
+		}
+		.random-tab {
+			height: 38px;
+			border: 0;
+			border-radius: 8px;
+			background: #e8e1d7;
+			color: #3e3934;
+			cursor: pointer;
+			font-weight: 700;
+		}
+		.random-tab.active {
+			background: #6f8f84;
+			color: #fff;
+		}
+		.random-pane { display: none; }
+		.random-pane.active { display: block; }
+		input, textarea {
+			width: 100%;
+			border: 1px solid #ded8cf;
+			border-radius: 8px;
+			background: #fbfaf8;
+			font: inherit;
+		}
+		input { height: 42px; margin-top: 10px; padding: 0 12px; }
+		textarea { min-height: 90px; margin-top: 10px; padding: 12px; resize: vertical; }
+		button.primary, button.secondary, button.danger {
+			width: 100%;
+			height: 44px;
+			margin-top: 12px;
+			border: 0;
+			border-radius: 8px;
+			color: #fff;
+			font-size: 15px;
+			cursor: pointer;
+		}
+		button.primary { background: #6f8f84; }
+		button.secondary { background: #7b7292; }
+		button.danger { background: #9a645a; }
+		button:disabled {
+			opacity: .55;
+			cursor: not-allowed;
+		}
+		.result {
+			margin-top: 12px;
+			padding: 14px;
+			border-radius: 8px;
+			background: #f5f2ec;
+			color: #5b796e;
+			font-size: 20px;
+			font-weight: 700;
+			line-height: 1.45;
+		}
+		.result.rolling {
+			position: relative;
+			padding-top: 62px;
+			animation: drawPulse .34s ease-in-out infinite alternate;
+		}
+		.result.rolling::before {
+			content: "";
+			position: absolute;
+			top: 14px;
+			left: 50%;
+			width: 16px;
+			height: 42px;
+			border-radius: 999px;
+			background: linear-gradient(180deg, #e6c984, #9a645a);
+			box-shadow:
+				-48px 7px 0 rgba(154, 100, 90, .78),
+				-24px -4px 0 rgba(230, 201, 132, .92),
+				24px -3px 0 rgba(154, 100, 90, .72),
+				48px 7px 0 rgba(230, 201, 132, .85);
+			transform: translateX(-50%);
+			animation: drawSticks .62s ease-in-out infinite;
+		}
+		@keyframes drawPulse {
+			from { transform: scale(.97); opacity: .62; }
+			to { transform: scale(1.03); opacity: 1; }
+		}
+		@keyframes drawSticks {
+			0%, 100% { transform: translateX(-50%) translateY(6px) rotate(-5deg); opacity: .58; }
+			50% { transform: translateX(-50%) translateY(-7px) rotate(5deg); opacity: 1; }
+		}
+		.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+		.chip {
+			padding: 7px 10px;
+			border-radius: 8px;
+			border: 0;
+			background: #ece7de;
+			color: #5f5953;
+			font-size: 13px;
+			cursor: pointer;
+		}
+		.row { display: grid; grid-template-columns: 1fr 92px; gap: 8px; align-items: center; }
+		.muted { color: #706a64; font-size: 14px; line-height: 1.6; }
+		.wheel-area {
+			display: none;
+			margin-top: 14px;
+			padding: 18px 10px 20px;
+			border-radius: 8px;
+			background: #f5f2ec;
+		}
+		.wheel-area.active { display: block; }
+		.wheel-tabs {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 8px;
+			margin-bottom: 14px;
+		}
+		.wheel-tab {
+			height: 38px;
+			border: 0;
+			border-radius: 8px;
+			background: #e8e1d7;
+			color: #3e3934;
+			cursor: pointer;
+			font-weight: 700;
+		}
+		.wheel-tab.active {
+			background: #6f8f84;
+			color: #fff;
+		}
+		.wheel-pane { display: none; }
+		.wheel-pane.active { display: block; }
+		.wheel-wrap {
+			position: relative;
+			width: 280px;
+			height: 280px;
+			margin: 0 auto;
+		}
+		.pointer {
+			position: absolute;
+			left: 50%;
+			top: -4px;
+			z-index: 4;
+			width: 0;
+			height: 0;
+			border-left: 16px solid transparent;
+			border-right: 16px solid transparent;
+			border-top: 42px solid #e2b94f;
+			transform: translateX(-50%);
+			filter: drop-shadow(0 4px 3px rgba(0,0,0,.22));
+		}
+		.wheel {
+			position: absolute;
+			inset: 0;
+			border-radius: 50%;
+			border: 12px solid #d9b45f;
+			box-shadow: inset 0 0 0 8px #7b7292, 0 12px 26px rgba(50,40,30,.25);
+			transition: transform 3s cubic-bezier(.16,.78,.2,1);
+		}
+		.wheel-label {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			width: 88px;
+			margin-left: -44px;
+			margin-top: -11px;
+			color: #6b2f13;
+			font-size: 13px;
+			font-weight: 700;
+			text-align: center;
+			transform-origin: 44px 11px;
+		}
+		.wheel-core {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			z-index: 5;
+			width: 82px;
+			height: 82px;
+			margin: -41px 0 0 -41px;
+			border: 0;
+			border-radius: 50%;
+			background: radial-gradient(circle at 38% 28%, #fff1b8, #d6a044 48%, #776397 100%);
+			color: #fff;
+			font-weight: 700;
+			cursor: pointer;
+			box-shadow: 0 8px 18px rgba(0,0,0,.28);
+		}
+		.option-editor {
+			margin-top: 16px;
+			padding-top: 14px;
+			border-top: 1px solid #ded8cf;
+		}
+		.editor-head {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 10px;
+			margin-bottom: 8px;
+		}
+		.editor-head strong { font-size: 15px; }
+		.small-button {
+			width: auto;
+			height: 32px;
+			margin: 0;
+			padding: 0 12px;
+			border: 0;
+			border-radius: 8px;
+			background: #e8e1d7;
+			color: #3e3934;
+			cursor: pointer;
+		}
+		.option-row {
+			display: grid;
+			grid-template-columns: 1fr 54px;
+			gap: 8px;
+			margin-top: 8px;
+		}
+		.option-row input { margin-top: 0; }
+		.option-row button {
+			height: 42px;
+			border: 0;
+			border-radius: 8px;
+			background: #f1e8e3;
+			color: #9a645a;
+			cursor: pointer;
+		}
+		.nav-tabs {
+			position: sticky;
+			bottom: 0;
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: 1px;
+			margin: 22px -20px -38px;
+			background: #d8d0c5;
+		}
+		.nav-tabs button {
+			height: 48px;
+			border: 0;
+			background: #fff;
+			color: #4d4742;
+			cursor: pointer;
+		}
+	</style>
+</head>
+<body>
+	<div class="phone">
+		<section class="page active" id="home">
+			<div class="kicker">解忧抉择</div>
+			<div class="title">告别纠结，一秒帮你做决定</div>
+			<div class="subtitle">小事交给天意，大事留给理智。免登录、无广告、本地保存。</div>
+
+			<div class="mode random" onclick="showPage('random')">
+				<h2>天意随机选</h2>
+				<p>适合吃什么、去哪玩、选哪件、二选一和多选一。</p>
+				<strong>开始抽签</strong>
+			</div>
+			<div class="mode rational" onclick="showPage('rational')">
+				<h2>理智分析选</h2>
+				<p>利弊清单、权重打分、灵魂拷问，适合大事慢慢想。</p>
+				<strong>开始分析</strong>
+			</div>
+
+			<div class="panel">
+				<div class="section-title">今日解忧</div>
+				<div class="quote" id="quote">允许自己慢一点，但别让纠结困住太久。</div>
+				<button class="primary" onclick="changeQuote()">换一句</button>
+			</div>
+
+			<div class="quick-grid">
+				<button class="quick" onclick="showPage('presets')">热门题库</button>
+				<button class="quick" onclick="showPage('history')">历史记录</button>
+				<button class="quick" onclick="showPage('healing')">治愈专区</button>
+				<button class="quick" onclick="showPage('settings')">个人设置</button>
+			</div>
+		</section>
+
+		<section class="page" id="random">
+			<button class="back" onclick="showPage('home')">返回首页</button>
+			<div class="title">天意随机选</div>
+			<div class="subtitle">适合小事纠结，不想动脑时就交给随机。</div>
+			<div class="panel">
+				<div class="random-tabs">
+					<button class="random-tab active" id="randomTabDraw" onclick="showRandomTab('draw')">抽签</button>
+					<button class="random-tab" id="randomTabWheel" onclick="showRandomTab('wheel')">转盘</button>
+				</div>
+
+				<div class="random-pane active" id="randomPaneDraw">
+					<div class="section-title">抽签选项</div>
+					<div class="muted">可指定 2-10 个候选项。</div>
+					<div id="drawOptionEditor"></div>
+					<div class="editor-head">
+						<button class="small-button" onclick="addDrawOption()">添加选项</button>
+						<button class="small-button" onclick="resetDrawOptions()">重置默认</button>
+					</div>
+					<button class="primary" id="drawButton" onclick="draw()">抽一签</button>
+				</div>
+
+				<div class="random-pane" id="randomPaneWheel">
+					<div class="wheel-area" id="wheelArea">
+						<div class="wheel-tabs">
+							<button class="wheel-tab active" id="wheelTabPreview" onclick="showWheelTab('preview')">转盘预览</button>
+							<button class="wheel-tab" id="wheelTabSettings" onclick="showWheelTab('settings')">选项设置</button>
+						</div>
+						<div class="wheel-pane active" id="wheelPanePreview">
+							<div class="wheel-wrap">
+								<div class="pointer"></div>
+								<div class="wheel" id="wheel"></div>
+								<button class="wheel-core" onclick="rotateWheel()">转动</button>
+							</div>
+						</div>
+						<div class="wheel-pane option-editor" id="wheelPaneSettings">
+							<div class="editor-head">
+								<strong>自定义选项</strong>
+								<button class="small-button" onclick="addWheelOption()">添加选项</button>
+							</div>
+							<div class="muted">至少 3 项，最多 10 项；保存后转盘文字和背景同步更新。</div>
+							<div id="optionEditor"></div>
+							<button class="primary" onclick="saveWheelOptions()">保存选项</button>
+						</div>
+					</div>
+				</div>
+				<div class="result" id="drawResult">等待抽签</div>
+			</div>
+		</section>
+
+		<section class="page" id="presets">
+			<button class="back" onclick="showPage('home')">返回首页</button>
+			<div class="title">热门预设题库</div>
+			<div class="subtitle">点分类可直接抽签，也可以载入转盘继续转。</div>
+			<div id="presetList"></div>
+		</section>
+
+		<section class="page" id="rational">
+			<button class="back" onclick="showPage('home')">返回首页</button>
+			<div class="title">理智分析选</div>
+			<div class="subtitle">用分数和问题把犹豫摊开来看。</div>
+			<div class="panel">
+				<div class="section-title">两个备选方案</div>
+				<input id="planA" value="留在当前岗位">
+				<input id="planB" value="尝试新机会">
+				<div class="row">
+					<input id="aPros" type="number" value="8" min="0" max="10">
+					<span class="muted">方案A优点</span>
+				</div>
+				<div class="row">
+					<input id="aCons" type="number" value="5" min="0" max="10">
+					<span class="muted">方案A缺点</span>
+				</div>
+				<div class="row">
+					<input id="bPros" type="number" value="9" min="0" max="10">
+					<span class="muted">方案B优点</span>
+				</div>
+				<div class="row">
+					<input id="bCons" type="number" value="3" min="0" max="10">
+					<span class="muted">方案B缺点</span>
+				</div>
+				<textarea id="question">这个选择五年后还会重要吗？</textarea>
+				<button class="primary" onclick="report()">生成分析报告</button>
+				<div class="result" id="reportResult">等待分析</div>
+			</div>
+		</section>
+
+		<section class="page" id="history">
+			<button class="back" onclick="showPage('home')">返回首页</button>
+			<div class="title">历史记录</div>
+			<div class="subtitle">浏览器预览会记录本页操作，刷新后清空；小程序版使用本地缓存。</div>
+			<div id="historyList"></div>
+			<button class="danger" onclick="clearHistory()">清空历史</button>
+		</section>
+
+		<section class="page" id="healing">
+			<button class="back" onclick="showPage('home')">返回首页</button>
+			<div class="title">治愈专区</div>
+			<div class="panel">
+				<div class="section-title">迷茫树洞</div>
+				<textarea id="treeText" placeholder="写下现在的心事，仅自己可见"></textarea>
+				<button class="primary" onclick="saveTree()">存进树洞</button>
+				<div id="treeList"></div>
+			</div>
+			<div class="panel">
+				<div class="section-title">决策小 tips</div>
+				<p class="muted">给选择设置截止时间；大事看价值，小事交给随机；先写最坏结果，再判断是否可承受。</p>
+			</div>
+		</section>
+
+		<section class="page" id="settings">
+			<button class="back" onclick="showPage('home')">返回首页</button>
+			<div class="title">个人设置</div>
+			<div class="panel">
+				<label><input type="checkbox" id="sound" checked> 抽签音效</label>
+				<br><br>
+				<label><input type="checkbox" id="vibrate" checked> 振动反馈</label>
+				<p class="muted">小程序版不会获取头像、昵称、手机号，所有内容本地保存。</p>
+				<button class="danger" onclick="clearHistory()">清除本地缓存</button>
+			</div>
+		</section>
+	</div>
+
+	<script>
+		const quotes = [
+			'答案不是终点，开始行动才是。',
+			'允许自己慢一点，但别让纠结困住太久。',
+			'今天先做一个小决定，明天就会轻一点。',
+			'选择没有完美版，只有当下更适合的一版。'
+		];
+		let drawOptions = ['外卖', '做饭', '出门走走', '在家休息'];
+		let wheelOptions = ['现在就做', '再想10分钟', '问问同事', '先休息一下', '写下利弊', '换个方案'];
+		const presetGroups = [
+			{ id: 'food', name: '干饭选择', options: ['米饭套餐', '面条', '轻食', '火锅', '便利店', '自己做饭'] },
+			{ id: 'trip', name: '出行选择', options: ['散步', '看电影', '逛商场', '去公园', '咖啡馆', '在家休息'] },
+			{ id: 'fun', name: '休闲娱乐', options: ['游戏一局', '看剧', '读书', '运动', '整理房间', '听播客'] },
+			{ id: 'work', name: '职场小事', options: ['先写方案', '先回消息', '整理待办', '请教同事', '休息五分钟'] },
+			{ id: 'wear', name: '穿搭选择', options: ['黑白基础款', '浅色舒适款', '正式一点', '运动风', '今天随性'] }
+		];
+		const history = [];
+		const tree = [];
+		let wheelTurns = 0;
+		let wheelBusy = false;
+
+		function showPage(id) {
+			document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+			document.getElementById(id).classList.add('active');
+			if (id === 'random') {
+				renderDrawOptionEditor();
+			}
+			if (id === 'presets') renderPresets();
+			if (id === 'history') renderHistory();
+			if (id === 'healing') renderTree();
+		}
+		function showRandomTab(tab) {
+			const isDraw = tab === 'draw';
+			document.getElementById('randomTabDraw').classList.toggle('active', isDraw);
+			document.getElementById('randomTabWheel').classList.toggle('active', !isDraw);
+			document.getElementById('randomPaneDraw').classList.toggle('active', isDraw);
+			document.getElementById('randomPaneWheel').classList.toggle('active', !isDraw);
+			if (isDraw) {
+				renderDrawOptionEditor();
+			} else {
+				spinWheel();
+			}
+		}
+		function renderDrawOptionEditor() {
+			document.getElementById('drawOptionEditor').innerHTML = drawOptions.map((option, index) => {
+				return `<div class="option-row">
+					<input value="${option}" data-draw-index="${index}" maxlength="12">
+					<button onclick="removeDrawOption(${index})">删除</button>
+				</div>`;
+			}).join('');
+		}
+		function addDrawOption() {
+			if (drawOptions.length >= 10) {
+				alert('最多 10 个选项');
+				return;
+			}
+			drawOptions.push('新选项');
+			renderDrawOptionEditor();
+		}
+		function removeDrawOption(index) {
+			if (drawOptions.length <= 2) {
+				alert('至少保留 2 个选项');
+				return;
+			}
+			drawOptions.splice(index, 1);
+			renderDrawOptionEditor();
+		}
+		function resetDrawOptions() {
+			drawOptions = ['外卖', '做饭', '出门走走', '在家休息'];
+			renderDrawOptionEditor();
+		}
+		function saveDrawOptionsFromEditor() {
+			const values = Array.from(document.querySelectorAll('[data-draw-index]'))
+				.map(input => input.value.trim())
+				.filter(Boolean)
+				.slice(0, 10);
+			if (values.length < 2) {
+				alert('请至少保留 2 个有效选项');
+				return null;
+			}
+			drawOptions = values;
+			renderDrawOptionEditor();
+			return values;
+		}
+		function showWheelTab(tab) {
+			const isPreview = tab === 'preview';
+			document.getElementById('wheelTabPreview').classList.toggle('active', isPreview);
+			document.getElementById('wheelTabSettings').classList.toggle('active', !isPreview);
+			document.getElementById('wheelPanePreview').classList.toggle('active', isPreview);
+			document.getElementById('wheelPaneSettings').classList.toggle('active', !isPreview);
+		}
+		function renderWheelLabels() {
+			const wheel = document.getElementById('wheel');
+			const colors = ['#f9f1d7', '#e8d1a5', '#fffaf0', '#e9dced'];
+			const segment = 360 / wheelOptions.length;
+			wheel.style.background = `conic-gradient(${wheelOptions.map((option, index) => {
+				const start = index * segment;
+				const end = (index + 1) * segment;
+				return `${colors[index % colors.length]} ${start}deg ${end}deg`;
+			}).join(', ')})`;
+			wheel.innerHTML = wheelOptions.map((option, index) => {
+				const angle = index * segment + segment / 2;
+				return `<div class="wheel-label" style="transform: rotate(${angle}deg) translateY(-88px) rotate(90deg);">${option}</div>`;
+			}).join('');
+		}
+		function renderOptionEditor() {
+			document.getElementById('optionEditor').innerHTML = wheelOptions.map((option, index) => {
+				return `<div class="option-row">
+					<input value="${option}" data-option-index="${index}" maxlength="12">
+					<button onclick="removeWheelOption(${index})">删除</button>
+				</div>`;
+			}).join('');
+		}
+		function addWheelOption() {
+			if (wheelOptions.length >= 10) {
+				alert('最多 10 个选项');
+				return;
+			}
+			wheelOptions.push('新选项');
+			renderOptionEditor();
+			renderWheelLabels();
+			showWheelTab('settings');
+		}
+		function removeWheelOption(index) {
+			if (wheelOptions.length <= 3) {
+				alert('至少保留 3 个选项');
+				return;
+			}
+			wheelOptions.splice(index, 1);
+			renderOptionEditor();
+			renderWheelLabels();
+			showWheelTab('settings');
+		}
+		function saveWheelOptions() {
+			const values = Array.from(document.querySelectorAll('[data-option-index]'))
+				.map(input => input.value.trim())
+				.filter(Boolean)
+				.slice(0, 10);
+			if (values.length < 3) {
+				alert('请至少保留 3 个有效选项');
+				return;
+			}
+			wheelOptions = values;
+			renderOptionEditor();
+			renderWheelLabels();
+			showWheelTab('preview');
+			document.getElementById('drawResult').textContent = '选项已保存，点击中心开始转动';
+		}
+		function changeQuote() {
+			document.getElementById('quote').textContent = quotes[Math.floor(Math.random() * quotes.length)];
+		}
+		function addHistory(title, result) {
+			history.unshift({ title, result, time: new Date().toLocaleString() });
+		}
+		function playDrawAnimation(options, resultElement, finalPrefix, buttonElement, onComplete) {
+			if (buttonElement) buttonElement.disabled = true;
+			resultElement.classList.add('rolling');
+			let tick = 0;
+			resultElement.textContent = options[0] || '抽签中...';
+			const timer = window.setInterval(() => {
+				resultElement.textContent = options[tick % options.length];
+				tick++;
+			}, 90);
+			const result = options[Math.floor(Math.random() * options.length)];
+			window.setTimeout(() => {
+				window.clearInterval(timer);
+				resultElement.classList.remove('rolling');
+				resultElement.textContent = finalPrefix + result;
+				if (buttonElement) buttonElement.disabled = false;
+				onComplete(result);
+			}, 1300);
+		}
+		function draw() {
+			const options = saveDrawOptionsFromEditor();
+			if (!options) return;
+			playDrawAnimation(
+				options,
+				document.getElementById('drawResult'),
+				'抽签抽到：',
+				document.getElementById('drawButton'),
+				result => addHistory('自定义抽签', result)
+			);
+		}
+		function spinWheel() {
+			document.getElementById('wheelArea').classList.add('active');
+			document.getElementById('drawResult').textContent = '点击转盘中心开始转动';
+			renderOptionEditor();
+			renderWheelLabels();
+			showWheelTab('preview');
+		}
+		function rotateWheel() {
+			if (wheelBusy) return;
+			wheelBusy = true;
+			const index = Math.floor(Math.random() * wheelOptions.length);
+			const result = wheelOptions[index];
+			wheelTurns += 1;
+			const segment = 360 / wheelOptions.length;
+			const target = wheelTurns * 1440 + (360 - (index * segment + segment / 2));
+			const wheel = document.getElementById('wheel');
+			wheel.style.transform = `rotate(${target}deg)`;
+			document.getElementById('drawResult').textContent = '转盘转动中...';
+			window.setTimeout(() => {
+				document.getElementById('drawResult').textContent = '转盘抽到：' + result;
+				addHistory('自定义多选转盘', result);
+				wheelBusy = false;
+			}, 3100);
+		}
+		function renderPresets() {
+			document.getElementById('presetList').innerHTML = presetGroups.map(group => {
+				return `<div class="panel" id="preset-${group.id}">
+					<div class="editor-head">
+						<div>
+							<div class="section-title">${group.name}</div>
+							<div class="muted">${group.options.length} 个候选项</div>
+						</div>
+						<button class="small-button" onclick="drawPreset('${group.id}')">直接抽签</button>
+					</div>
+					<div class="chips">
+						${group.options.map(option => `<button class="chip" onclick="choosePreset('${group.id}','${option}')">${option}</button>`).join('')}
+					</div>
+					<div class="result" id="presetResult-${group.id}">等待抽签</div>
+					<button class="primary" onclick="loadPresetWheel('${group.id}')">载入转盘</button>
+				</div>`;
+			}).join('');
+		}
+		function findPreset(id) {
+			return presetGroups.find(group => group.id === id);
+		}
+		function setPresetResult(group, result) {
+			document.getElementById(`presetResult-${group.id}`).textContent = '预设题库抽到：' + result;
+			addHistory(`预设题库：${group.name}`, result);
+		}
+		function drawPreset(id) {
+			const group = findPreset(id);
+			playDrawAnimation(
+				group.options,
+				document.getElementById(`presetResult-${group.id}`),
+				'预设题库抽到：',
+				document.querySelector(`#preset-${group.id} .small-button`),
+				result => addHistory(`预设题库：${group.name}`, result)
+			);
+		}
+		function choosePreset(id, result) {
+			const group = findPreset(id);
+			setPresetResult(group, result);
+		}
+		function loadPresetWheel(id) {
+			const group = findPreset(id);
+			wheelOptions = group.options.slice();
+			renderWheelLabels();
+			renderOptionEditor();
+			showPage('random');
+			showRandomTab('wheel');
+			document.getElementById('drawResult').textContent = `${group.name} 已载入转盘`;
+		}
+		function score(id) {
+			return Number(document.getElementById(id).value || 0);
+		}
+		function report() {
+			const a = score('aPros') - score('aCons');
+			const b = score('bPros') - score('bCons');
+			const result = b > a ? document.getElementById('planB').value : a > b ? document.getElementById('planA').value : '两个方案接近';
+			const text = `${result} 当前更占优。方案A ${a} 分，方案B ${b} 分。`;
+			document.getElementById('reportResult').textContent = text;
+			addHistory('理智分析选', result);
+		}
+		function renderHistory() {
+			const list = document.getElementById('historyList');
+			if (!history.length) {
+				list.innerHTML = '<div class="panel muted">还没有记录，先去抽签或分析一次。</div>';
+				return;
+			}
+			list.innerHTML = history.map(item => `<div class="record"><div class="section-title">${item.time}</div><div class="quote">${item.result}</div><div class="muted">${item.title}</div></div>`).join('');
+		}
+		function clearHistory() {
+			history.length = 0;
+			renderHistory();
+			alert('预览缓存已清空');
+		}
+		function saveTree() {
+			const text = document.getElementById('treeText').value.trim();
+			if (!text) return alert('先写一点内容吧');
+			tree.unshift(text);
+			document.getElementById('treeText').value = '';
+			renderTree();
+		}
+		function renderTree() {
+			document.getElementById('treeList').innerHTML = tree.map(text => `<div class="record muted">${text}</div>`).join('');
+		}
+		renderWheelLabels();
+	</script>
+</body>
+</html>

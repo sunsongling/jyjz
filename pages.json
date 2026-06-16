@@ -1,0 +1,77 @@
+{
+	"pages": [
+		{
+			"path": "pages/guide/index",
+			"style": {
+				"navigationBarTitleText": "解忧抉择"
+			}
+		},
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "解忧抉择"
+			}
+		},
+		{
+			"path": "pages/random/index",
+			"style": {
+				"navigationBarTitleText": "天意随机选"
+			}
+		},
+		{
+			"path": "pages/game/index",
+			"style": {
+				"navigationBarTitleText": "自定义转盘"
+			}
+		},
+		{
+			"path": "pages/game-settings/index",
+			"style": {
+				"navigationBarTitleText": "转盘选项设置"
+			}
+		},
+		{
+			"path": "pages/presets/index",
+			"style": {
+				"navigationBarTitleText": "热门题库"
+			}
+		},
+		{
+			"path": "pages/rational/index",
+			"style": {
+				"navigationBarTitleText": "理智分析选"
+			}
+		},
+		{
+			"path": "pages/history/index",
+			"style": {
+				"navigationBarTitleText": "历史记录"
+			}
+		},
+		{
+			"path": "pages/healing/index",
+			"style": {
+				"navigationBarTitleText": "治愈专区"
+			}
+		},
+		{
+			"path": "pages/settings/index",
+			"style": {
+				"navigationBarTitleText": "个人设置"
+			}
+		},
+		{
+			"path": "pages/result/index",
+			"style": {
+				"navigationBarTitleText": "结果展示"
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "解忧抉择",
+		"navigationBarBackgroundColor": "#F5F2EC",
+		"backgroundColor": "#F5F2EC"
+	},
+	"uniIdRouter": {}
+}
